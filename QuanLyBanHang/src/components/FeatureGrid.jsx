@@ -12,6 +12,7 @@ function FeatureGrid({ onFeatureClick }) {
         { id: 'import-orders', name: 'Nhập hàng', icon: '🛒' },
         { id: 'calendar', name: 'Lịch nhắc', icon: '📅' },
         { id: 'categories', name: 'Danh mục', icon: '📂' },
+        { id: 'store-settings', name: 'Cửa hàng', icon: '⚙️' },
     ]
 
     return (

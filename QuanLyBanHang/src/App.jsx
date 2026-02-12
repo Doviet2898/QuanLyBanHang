@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Header from './components/Header'
 import Dashboard from './pages/Dashboard'
 import CreateOrder from './pages/CreateOrder'
@@ -7,10 +7,20 @@ import Products from './pages/Products'
 import Warehouse from './pages/Warehouse'
 import Staff from './pages/Staff'
 import Reports from './pages/Reports'
+import Debts from './pages/Debts'
+import ImportGoods from './pages/ImportGoods'
+import Suppliers from './pages/Suppliers'
+import Reminders from './pages/Reminders'
+import Categories from './pages/Categories'
+import Promotions from './pages/Promotions'
+import StoreSettings from './pages/StoreSettings'
 import './App.css'
 
 function App() {
     const [currentView, setCurrentView] = useState('dashboard')
+    const [storeName, setStoreName] = useState('Cafe Đỗ Việt')
+
+    // States for features
     const [orders, setOrders] = useState([])
     const [products, setProducts] = useState([
         { id: 1, name: 'Cà phê đen', price: 25000, stock: 100, category: 'Đồ uống' },
@@ -18,6 +28,14 @@ function App() {
         { id: 3, name: 'Bánh mì', price: 20000, stock: 50, category: 'Đồ ăn' },
         { id: 4, name: 'Trà đào', price: 35000, stock: 80, category: 'Đồ uống' },
     ])
+    const [categories, setCategories] = useState(['Đồ uống', 'Đồ ăn', 'Khác'])
+    const [suppliers, setSuppliers] = useState([
+        { id: 1, name: 'Công ty Cà Phê Việt', phone: '0912345678', address: 'Bảo Lộc, Lâm Đồng' }
+    ])
+    const [debts, setDebts] = useState([])
+    const [importOrders, setImportOrders] = useState([])
+    const [reminders, setReminders] = useState([])
+    const [promotions, setPromotions] = useState([])
     const [staff, setStaff] = useState([
         { id: 1, name: 'Nguyễn Văn A', position: 'Quản lý', phone: '0901234567', salary: 15000000 },
         { id: 2, name: 'Trần Thị B', position: 'Nhân viên', phone: '0907654321', salary: 8000000 },
@@ -26,16 +44,28 @@ function App() {
         { id: 1, date: new Date().toLocaleString('vi-VN'), productName: 'Cà phê đen', type: 'Nhập kho', quantity: 100, note: 'Tồn kho ban đầu' },
     ])
 
+    // Effect to update doc title when storeName changes
+    useEffect(() => {
+        document.title = `Quản Lý Bán Hàng - ${storeName}`
+    }, [storeName])
+
+    // Helper functions
     const addOrder = (order) => {
-        const newOrder = {
-            ...order,
-            id: Date.now(),
-            date: new Date().toLocaleString('vi-VN'),
-            status: 'Đang xử lý'
-        }
+        const newOrder = { ...order, id: Date.now(), date: new Date().toLocaleString('vi-VN'), status: 'Đang xử lý' }
         setOrders([newOrder, ...orders])
 
-        // Reduce stock and log history
+        // Logic for debts if not paid full (simplified)
+        if (order.unpaidAmount > 0) {
+            setDebts([{
+                id: Date.now(),
+                customerName: order.customerName,
+                phone: order.customerPhone,
+                amount: order.unpaidAmount,
+                date: new Date().toLocaleString('vi-VN'),
+                orderId: newOrder.id
+            }, ...debts])
+        }
+
         const historyLogs = []
         const updatedProducts = products.map(product => {
             const orderItem = order.items.find(item => item.id === product.id)
@@ -56,132 +86,55 @@ function App() {
         setStockHistory(prev => [...historyLogs, ...prev])
     }
 
-    const updateOrderStatus = (orderId, newStatus) => {
-        setOrders(orders.map(order =>
-            order.id === orderId ? { ...order, status: newStatus } : order
-        ))
-    }
+    const handleImport = (importOrder) => {
+        const newImport = { ...importOrder, id: Date.now(), date: new Date().toLocaleString('vi-VN') }
+        setImportOrders([newImport, ...importOrders])
 
-    const deleteOrder = (orderId) => {
-        if (window.confirm('Bạn có chắc chắn muốn xóa đơn hàng này?')) {
-            setOrders(orders.filter(order => order.id !== orderId))
-        }
-    }
-
-    const updateOrder = (orderId, updatedOrder) => {
-        setOrders(orders.map(order =>
-            order.id === orderId ? { ...order, ...updatedOrder } : order
-        ))
-    }
-
-    const addProduct = (product) => {
-        const newProduct = { ...product, id: Date.now() }
-        setProducts([...products, newProduct])
-        setStockHistory(prev => [{
-            id: Date.now(),
-            date: new Date().toLocaleString('vi-VN'),
-            productName: product.name,
-            type: 'Nhập kho (Thêm mới)',
-            quantity: product.stock,
-            note: 'Thêm sản phẩm mới'
-        }, ...prev])
-    }
-
-    const updateProduct = (productId, updatedData) => {
-        setProducts(prevProducts => prevProducts.map(product => {
-            if (product.id === productId) {
-                if (updatedData.stock !== undefined && updatedData.stock !== product.stock) {
-                    const diff = updatedData.stock - product.stock
-                    setStockHistory(prev => [{
-                        id: Date.now(),
-                        date: new Date().toLocaleString('vi-VN'),
-                        productName: product.name,
-                        type: diff > 0 ? 'Nhập kho' : 'Xuất kho',
-                        quantity: Math.abs(diff),
-                        note: updatedData.note || 'Cập nhật kho thủ công'
-                    }, ...prev])
-                }
-                return { ...product, ...updatedData }
+        const historyLogs = []
+        const updatedProducts = products.map(product => {
+            const importItem = importOrder.items.find(item => item.id === product.id)
+            if (importItem) {
+                historyLogs.push({
+                    id: Date.now() + Math.random(),
+                    date: new Date().toLocaleString('vi-VN'),
+                    productName: product.name,
+                    type: 'Nhập kho (Nhập hàng)',
+                    quantity: importItem.quantity,
+                    note: `Đơn nhập #${newImport.id} từ ${importOrder.supplierName}`
+                })
+                return { ...product, stock: product.stock + importItem.quantity }
             }
             return product
-        }))
-    }
-
-    const deleteProduct = (productId) => {
-        setProducts(products.filter(product => product.id !== productId))
-    }
-
-    const addStaff = (staffMember) => {
-        const newStaff = { ...staffMember, id: Date.now() }
-        setStaff([...staff, newStaff])
-    }
-
-    const updateStaff = (staffId, updatedData) => {
-        setStaff(staff.map(member =>
-            member.id === staffId ? { ...member, ...updatedData } : member
-        ))
-    }
-
-    const deleteStaff = (staffId) => {
-        setStaff(staff.filter(member => member.id !== staffId))
+        })
+        setProducts(updatedProducts)
+        setStockHistory(prev => [...historyLogs, ...prev])
     }
 
     const renderView = () => {
+        const commonProps = { onBack: () => setCurrentView('dashboard') }
+
         switch (currentView) {
-            case 'dashboard':
-                return <Dashboard onFeatureClick={setCurrentView} orders={orders} products={products} />
-            case 'create-order':
-                return <CreateOrder products={products} onAddOrder={addOrder} onBack={() => setCurrentView('dashboard')} />
-            case 'orders':
-                return (
-                    <Orders
-                        orders={orders}
-                        products={products}
-                        onUpdateStatus={updateOrderStatus}
-                        onDeleteOrder={deleteOrder}
-                        onUpdateOrder={updateOrder}
-                        onBack={() => setCurrentView('dashboard')}
-                    />
-                )
-            case 'products':
-                return (
-                    <Products
-                        products={products}
-                        onAddProduct={addProduct}
-                        onUpdateProduct={updateProduct}
-                        onDeleteProduct={deleteProduct}
-                        onBack={() => setCurrentView('dashboard')}
-                    />
-                )
-            case 'warehouse':
-                return (
-                    <Warehouse
-                        products={products}
-                        onUpdateProduct={updateProduct}
-                        stockHistory={stockHistory}
-                        onBack={() => setCurrentView('dashboard')}
-                    />
-                )
-            case 'staff':
-                return (
-                    <Staff
-                        staff={staff}
-                        onAddStaff={addStaff}
-                        onUpdateStaff={updateStaff}
-                        onDeleteStaff={deleteStaff}
-                        onBack={() => setCurrentView('dashboard')}
-                    />
-                )
-            case 'reports':
-                return <Reports orders={orders} products={products} onBack={() => setCurrentView('dashboard')} />
-            default:
-                return <Dashboard onFeatureClick={setCurrentView} orders={orders} products={products} />
+            case 'dashboard': return <Dashboard onFeatureClick={setCurrentView} orders={orders} products={products} />
+            case 'create-order': return <CreateOrder products={products} onAddOrder={addOrder} {...commonProps} />
+            case 'orders': return <Orders orders={orders} products={products} onUpdateStatus={(id, s) => setOrders(orders.map(o => o.id === id ? { ...o, status: s } : o))} onDeleteOrder={id => setOrders(orders.filter(o => o.id !== id))} onUpdateOrder={(id, u) => setOrders(orders.map(o => o.id === id ? { ...o, ...u } : o))} {...commonProps} />
+            case 'products': return <Products products={products} onAddProduct={p => setProducts([...products, { ...p, id: Date.now() }])} onUpdateProduct={(id, d) => setProducts(products.map(p => p.id === id ? { ...p, ...d } : p))} onDeleteProduct={id => setProducts(products.filter(p => p.id !== id))} {...commonProps} />
+            case 'warehouse': return <Warehouse products={products} onUpdateProduct={(id, d) => setProducts(products.map(p => p.id === id ? { ...p, ...d } : p))} stockHistory={stockHistory} {...commonProps} />
+            case 'staff': return <Staff staff={staff} onAddStaff={s => setStaff([...staff, { ...s, id: Date.now() }])} onUpdateStaff={(id, d) => setStaff(staff.map(s => s.id === id ? { ...s, ...d } : s))} onDeleteStaff={id => setStaff(staff.filter(s => s.id !== id))} {...commonProps} />
+            case 'reports': return <Reports orders={orders} products={products} {...commonProps} />
+            case 'notebook': return <Debts debts={debts} onPayDebt={id => setDebts(debts.filter(d => d.id !== id))} {...commonProps} />
+            case 'import-orders': return <ImportGoods products={products} suppliers={suppliers} onImport={handleImport} {...commonProps} />
+            case 'suppliers': return <Suppliers suppliers={suppliers} setSuppliers={setSuppliers} {...commonProps} />
+            case 'calendar': return <Reminders reminders={reminders} setReminders={setReminders} {...commonProps} />
+            case 'categories': return <Categories categories={categories} setCategories={setCategories} {...commonProps} />
+            case 'promotions': return <Promotions promotions={promotions} setPromotions={setPromotions} {...commonProps} />
+            case 'store-settings': return <StoreSettings storeName={storeName} setStoreName={setStoreName} {...commonProps} />
+            default: return <Dashboard onFeatureClick={setCurrentView} orders={orders} products={products} />
         }
     }
 
     return (
         <div className="app">
-            <Header currentView={currentView} onNavigate={setCurrentView} />
+            <Header storeName={storeName} currentView={currentView} onNavigate={setCurrentView} />
             <main className="main-content">
                 {renderView()}
             </main>

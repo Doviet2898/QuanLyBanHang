@@ -1,4 +1,4 @@
-function Header({ currentView, onNavigate }) {
+function Header({ storeName, currentView, onNavigate }) {
     return (
         <header className="header">
             <div className="container">
@@ -9,16 +9,16 @@ function Header({ currentView, onNavigate }) {
                         </div>
                         <div className="store-info">
                             <h1 onClick={() => onNavigate('dashboard')} style={{ cursor: 'pointer' }}>
-                                Cafe Đỗ Việt
+                                {storeName}
                             </h1>
                             <div className="store-status">
                                 <span>▶</span>
-                                <span>Thiết lập vận hành</span>
+                                <span onClick={() => onNavigate('store-settings')} style={{ cursor: 'pointer' }}>Thiết lập vận hành</span>
                             </div>
                         </div>
                     </div>
                     <div className="header-actions">
-                        <button className="icon-btn" title="Lịch">📅</button>
+                        <button className="icon-btn" title="Lịch" onClick={() => onNavigate('calendar')}>📅</button>
                         <button className="icon-btn" title="Thông báo">🔔</button>
                         {currentView !== 'dashboard' && (
                             <button

@@ -1,5 +1,12 @@
-.reports-page {
-  padding: var(--spacing-lg) 0;
+.chart-container {
+  min-height: 400px;
+}
+
+.chart-wrapper {
+  position: relative;
+  height: 300px;
+  width: 100%;
+  margin-top: var(--spacing-md);
 }
 
 .reports-grid {

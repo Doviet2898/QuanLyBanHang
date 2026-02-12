@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import '../styles/Warehouse.css'
 
-function Warehouse({ products, onUpdateProduct, onBack }) {
+function Warehouse({ products, onUpdateProduct, stockHistory, onBack }) {
     const [searchTerm, setSearchTerm] = useState('')
     const [selectedProduct, setSelectedProduct] = useState(null)
     const [adjustmentType, setAdjustmentType] = useState('import') // import or export
     const [quantity, setQuantity] = useState('')
     const [note, setNote] = useState('')
+    const [viewTab, setViewTab] = useState('overview') // overview or history
 
     const handleAdjustStock = (e) => {
         e.preventDefault()
@@ -26,7 +27,7 @@ function Warehouse({ products, onUpdateProduct, onBack }) {
             return
         }
 
-        onUpdateProduct(selectedProduct.id, { stock: newStock })
+        onUpdateProduct(selectedProduct.id, { stock: newStock, note: note })
 
         alert(`${adjustmentType === 'import' ? 'Nhập' : 'Xuất'} kho thành công!`)
 
@@ -48,174 +49,173 @@ function Warehouse({ products, onUpdateProduct, onBack }) {
                 <div className="page-header">
                     <button className="btn-back" onClick={onBack}>← Quay lại</button>
                     <h2>Quản Lý Kho Hàng</h2>
+                    <div className="tab-group">
+                        <button className={`tab-btn ${viewTab === 'overview' ? 'active' : ''}`} onClick={() => setViewTab('overview')}>📊 Tổng Quan</button>
+                        <button className={`tab-btn ${viewTab === 'history' ? 'active' : ''}`} onClick={() => setViewTab('history')}>📜 Lịch Sử Giao Dịch</button>
+                    </div>
                 </div>
 
-                {lowStockProducts.length > 0 && (
-                    <div className="alert alert-warning">
-                        <strong>⚠️ Cảnh báo:</strong> Có {lowStockProducts.length} sản phẩm sắp hết hàng!
-                        <ul>
-                            {lowStockProducts.map(product => (
-                                <li key={product.id}>{product.name}: {product.stock} sản phẩm</li>
-                            ))}
-                        </ul>
-                    </div>
-                )}
-
-                <div className="warehouse-content">
-                    <div className="stock-adjustment">
-                        <h3>Nhập/Xuất Kho</h3>
-                        <form onSubmit={handleAdjustStock}>
-                            <div className="form-group">
-                                <label>Loại giao dịch</label>
-                                <div className="radio-group">
-                                    <label className="radio-label">
-                                        <input
-                                            type="radio"
-                                            value="import"
-                                            checked={adjustmentType === 'import'}
-                                            onChange={(e) => setAdjustmentType(e.target.value)}
-                                        />
-                                        <span>📥 Nhập kho</span>
-                                    </label>
-                                    <label className="radio-label">
-                                        <input
-                                            type="radio"
-                                            value="export"
-                                            checked={adjustmentType === 'export'}
-                                            onChange={(e) => setAdjustmentType(e.target.value)}
-                                        />
-                                        <span>📤 Xuất kho</span>
-                                    </label>
-                                </div>
-                            </div>
-
-                            <div className="form-group">
-                                <label>Tìm kiếm sản phẩm</label>
-                                <input
-                                    type="text"
-                                    placeholder="🔍 Nhập tên sản phẩm..."
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="form-input"
-                                />
-                            </div>
-
-                            <div className="form-group">
-                                <label>Chọn sản phẩm *</label>
-                                <div className="product-select-list">
-                                    {filteredProducts.map(product => (
-                                        <div
-                                            key={product.id}
-                                            className={`product-select-item ${selectedProduct?.id === product.id ? 'selected' : ''}`}
-                                            onClick={() => setSelectedProduct(product)}
-                                        >
-                                            <div className="product-select-info">
-                                                <strong>{product.name}</strong>
-                                                <span className="product-select-stock">
-                                                    Tồn kho: {product.stock}
-                                                </span>
-                                            </div>
-                                            {selectedProduct?.id === product.id && <span className="check-icon">✓</span>}
-                                        </div>
+                {viewTab === 'overview' ? (
+                    <>
+                        {lowStockProducts.length > 0 && (
+                            <div className="alert alert-warning">
+                                <strong>⚠️ Cảnh báo:</strong> Có {lowStockProducts.length} sản phẩm sắp hết hàng!
+                                <ul>
+                                    {lowStockProducts.map(product => (
+                                        <li key={product.id}>{product.name}: {product.stock} sản phẩm</li>
                                     ))}
-                                </div>
+                                </ul>
                             </div>
+                        )}
 
-                            {selectedProduct && (
-                                <>
+                        <div className="warehouse-content">
+                            <div className="stock-adjustment">
+                                <h3>Nhập/Xuất Kho</h3>
+                                <form onSubmit={handleAdjustStock}>
                                     <div className="form-group">
-                                        <label>Số lượng *</label>
+                                        <label>Loại giao dịch</label>
+                                        <div className="radio-group">
+                                            <label className="radio-label">
+                                                <input
+                                                    type="radio"
+                                                    value="import"
+                                                    checked={adjustmentType === 'import'}
+                                                    onChange={(e) => setAdjustmentType(e.target.value)}
+                                                />
+                                                <span>📥 Nhập kho</span>
+                                            </label>
+                                            <label className="radio-label">
+                                                <input
+                                                    type="radio"
+                                                    value="export"
+                                                    checked={adjustmentType === 'export'}
+                                                    onChange={(e) => setAdjustmentType(e.target.value)}
+                                                />
+                                                <span>📤 Xuất kho</span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label>Tìm kiếm sản phẩm</label>
                                         <input
-                                            type="number"
-                                            value={quantity}
-                                            onChange={(e) => setQuantity(e.target.value)}
-                                            min="1"
-                                            required
+                                            type="text"
+                                            placeholder="🔍 Nhập tên sản phẩm..."
+                                            value={searchTerm}
+                                            onChange={(e) => setSearchTerm(e.target.value)}
                                             className="form-input"
-                                            placeholder="Nhập số lượng"
                                         />
                                     </div>
 
                                     <div className="form-group">
-                                        <label>Ghi chú</label>
-                                        <textarea
-                                            value={note}
-                                            onChange={(e) => setNote(e.target.value)}
-                                            className="form-input"
-                                            placeholder="Nhập ghi chú (tùy chọn)"
-                                            rows="3"
-                                        />
+                                        <label>Chọn sản phẩm *</label>
+                                        <div className="product-select-list">
+                                            {filteredProducts.map(product => (
+                                                <div
+                                                    key={product.id}
+                                                    className={`product-select-item ${selectedProduct?.id === product.id ? 'selected' : ''}`}
+                                                    onClick={() => setSelectedProduct(product)}
+                                                >
+                                                    <div className="product-select-info">
+                                                        <strong>{product.name}</strong>
+                                                        <span className="product-select-stock">Tồn kho: {product.stock}</span>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
                                     </div>
 
-                                    <button type="submit" className="btn btn-primary btn-submit">
-                                        {adjustmentType === 'import' ? '📥 Nhập Kho' : '📤 Xuất Kho'}
-                                    </button>
-                                </>
-                            )}
-                        </form>
-                    </div>
+                                    {selectedProduct && (
+                                        <>
+                                            <div className="form-group">
+                                                <label>Số lượng *</label>
+                                                <input
+                                                    type="number"
+                                                    value={quantity}
+                                                    onChange={(e) => setQuantity(e.target.value)}
+                                                    min="1"
+                                                    required
+                                                    className="form-input"
+                                                />
+                                            </div>
+                                            <div className="form-group">
+                                                <label>Ghi chú</label>
+                                                <textarea
+                                                    value={note}
+                                                    onChange={(e) => setNote(e.target.value)}
+                                                    className="form-input"
+                                                    rows="3"
+                                                ></textarea>
+                                            </div>
+                                            <button type="submit" className="btn btn-primary btn-submit">Xác nhận giao dịch</button>
+                                        </>
+                                    )}
+                                </form>
+                            </div>
 
-                    <div className="stock-overview">
-                        <h3>Tổng Quan Kho Hàng</h3>
-                        <div className="stock-stats">
-                            <div className="stat-box">
-                                <div className="stat-icon">📦</div>
-                                <div className="stat-info">
-                                    <div className="stat-value">{products.length}</div>
-                                    <div className="stat-label">Tổng sản phẩm</div>
-                                </div>
-                            </div>
-                            <div className="stat-box">
-                                <div className="stat-icon">📊</div>
-                                <div className="stat-info">
-                                    <div className="stat-value">
-                                        {products.reduce((sum, p) => sum + p.stock, 0)}
-                                    </div>
-                                    <div className="stat-label">Tổng tồn kho</div>
-                                </div>
-                            </div>
-                            <div className="stat-box warning">
-                                <div className="stat-icon">⚠️</div>
-                                <div className="stat-info">
-                                    <div className="stat-value">{lowStockProducts.length}</div>
-                                    <div className="stat-label">Sắp hết hàng</div>
+                            <div className="stock-overview">
+                                <h3>Danh sách hàng tồn</h3>
+                                <div className="stock-table">
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th>Sản phẩm</th>
+                                                <th>Danh mục</th>
+                                                <th>Tồn kho</th>
+                                                <th>Trạng thái</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {products.map(product => (
+                                                <tr key={product.id}>
+                                                    <td>{product.name}</td>
+                                                    <td>{product.category}</td>
+                                                    <td className={product.stock < 20 ? 'stock-low' : 'stock-ok'}>{product.stock}</td>
+                                                    <td>
+                                                        {product.stock < 10 ? <span className="badge badge-danger">Rất thấp</span>
+                                                            : product.stock < 20 ? <span className="badge badge-warning">Thấp</span>
+                                                                : <span className="badge badge-success">Đủ hàng</span>}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
                         </div>
-
+                    </>
+                ) : (
+                    <div className="history-section">
                         <div className="stock-table">
-                            <h4>Danh Sách Tồn Kho</h4>
                             <table>
                                 <thead>
                                     <tr>
+                                        <th>Ngày</th>
                                         <th>Sản phẩm</th>
-                                        <th>Danh mục</th>
-                                        <th>Tồn kho</th>
-                                        <th>Trạng thái</th>
+                                        <th>Loại</th>
+                                        <th>Số lượng</th>
+                                        <th>Ghi chú</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {products.map(product => (
-                                        <tr key={product.id}>
-                                            <td>{product.name}</td>
-                                            <td>{product.category}</td>
-                                            <td>{product.stock}</td>
+                                    {stockHistory.map(log => (
+                                        <tr key={log.id}>
+                                            <td>{log.date}</td>
+                                            <td><strong>{log.productName}</strong></td>
                                             <td>
-                                                {product.stock < 10 ? (
-                                                    <span className="badge badge-danger">Rất thấp</span>
-                                                ) : product.stock < 20 ? (
-                                                    <span className="badge badge-warning">Thấp</span>
-                                                ) : (
-                                                    <span className="badge badge-success">Đủ hàng</span>
-                                                )}
+                                                <span className={`badge ${log.type.includes('Nhập') ? 'badge-success' : 'badge-danger'}`}>
+                                                    {log.type}
+                                                </span>
                                             </td>
+                                            <td>{log.quantity}</td>
+                                            <td>{log.note}</td>
                                         </tr>
                                     ))}
                                 </tbody>
                             </table>
                         </div>
                     </div>
-                </div>
+                )}
             </div>
         </div>
     )

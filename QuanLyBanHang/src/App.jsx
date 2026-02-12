@@ -22,6 +22,9 @@ function App() {
         { id: 1, name: 'Nguyễn Văn A', position: 'Quản lý', phone: '0901234567', salary: 15000000 },
         { id: 2, name: 'Trần Thị B', position: 'Nhân viên', phone: '0907654321', salary: 8000000 },
     ])
+    const [stockHistory, setStockHistory] = useState([
+        { id: 1, date: new Date().toLocaleString('vi-VN'), productName: 'Cà phê đen', type: 'Nhập kho', quantity: 100, note: 'Tồn kho ban đầu' },
+    ])
 
     const addOrder = (order) => {
         const newOrder = {
@@ -32,15 +35,25 @@ function App() {
         }
         setOrders([newOrder, ...orders])
 
-        // Reduce stock for each item in the order
+        // Reduce stock and log history
+        const historyLogs = []
         const updatedProducts = products.map(product => {
             const orderItem = order.items.find(item => item.id === product.id)
             if (orderItem) {
+                historyLogs.push({
+                    id: Date.now() + Math.random(),
+                    date: new Date().toLocaleString('vi-VN'),
+                    productName: product.name,
+                    type: 'Xuất kho (Bán hàng)',
+                    quantity: orderItem.quantity,
+                    note: `Đơn hàng #${newOrder.id}`
+                })
                 return { ...product, stock: Math.max(0, product.stock - orderItem.quantity) }
             }
             return product
         })
         setProducts(updatedProducts)
+        setStockHistory(prev => [...historyLogs, ...prev])
     }
 
     const updateOrderStatus = (orderId, newStatus) => {
@@ -49,18 +62,49 @@ function App() {
         ))
     }
 
-    const addProduct = (product) => {
-        const newProduct = {
-            ...product,
-            id: Date.now()
+    const deleteOrder = (orderId) => {
+        if (window.confirm('Bạn có chắc chắn muốn xóa đơn hàng này?')) {
+            setOrders(orders.filter(order => order.id !== orderId))
         }
+    }
+
+    const updateOrder = (orderId, updatedOrder) => {
+        setOrders(orders.map(order =>
+            order.id === orderId ? { ...order, ...updatedOrder } : order
+        ))
+    }
+
+    const addProduct = (product) => {
+        const newProduct = { ...product, id: Date.now() }
         setProducts([...products, newProduct])
+        setStockHistory(prev => [{
+            id: Date.now(),
+            date: new Date().toLocaleString('vi-VN'),
+            productName: product.name,
+            type: 'Nhập kho (Thêm mới)',
+            quantity: product.stock,
+            note: 'Thêm sản phẩm mới'
+        }, ...prev])
     }
 
     const updateProduct = (productId, updatedData) => {
-        setProducts(products.map(product =>
-            product.id === productId ? { ...product, ...updatedData } : product
-        ))
+        setProducts(prevProducts => prevProducts.map(product => {
+            if (product.id === productId) {
+                if (updatedData.stock !== undefined && updatedData.stock !== product.stock) {
+                    const diff = updatedData.stock - product.stock
+                    setStockHistory(prev => [{
+                        id: Date.now(),
+                        date: new Date().toLocaleString('vi-VN'),
+                        productName: product.name,
+                        type: diff > 0 ? 'Nhập kho' : 'Xuất kho',
+                        quantity: Math.abs(diff),
+                        note: updatedData.note || 'Cập nhật kho thủ công'
+                    }, ...prev])
+                }
+                return { ...product, ...updatedData }
+            }
+            return product
+        }))
     }
 
     const deleteProduct = (productId) => {
@@ -68,10 +112,7 @@ function App() {
     }
 
     const addStaff = (staffMember) => {
-        const newStaff = {
-            ...staffMember,
-            id: Date.now()
-        }
+        const newStaff = { ...staffMember, id: Date.now() }
         setStaff([...staff, newStaff])
     }
 
@@ -92,25 +133,45 @@ function App() {
             case 'create-order':
                 return <CreateOrder products={products} onAddOrder={addOrder} onBack={() => setCurrentView('dashboard')} />
             case 'orders':
-                return <Orders orders={orders} onUpdateStatus={updateOrderStatus} onBack={() => setCurrentView('dashboard')} />
+                return (
+                    <Orders
+                        orders={orders}
+                        products={products}
+                        onUpdateStatus={updateOrderStatus}
+                        onDeleteOrder={deleteOrder}
+                        onUpdateOrder={updateOrder}
+                        onBack={() => setCurrentView('dashboard')}
+                    />
+                )
             case 'products':
-                return <Products
-                    products={products}
-                    onAddProduct={addProduct}
-                    onUpdateProduct={updateProduct}
-                    onDeleteProduct={deleteProduct}
-                    onBack={() => setCurrentView('dashboard')}
-                />
+                return (
+                    <Products
+                        products={products}
+                        onAddProduct={addProduct}
+                        onUpdateProduct={updateProduct}
+                        onDeleteProduct={deleteProduct}
+                        onBack={() => setCurrentView('dashboard')}
+                    />
+                )
             case 'warehouse':
-                return <Warehouse products={products} onUpdateProduct={updateProduct} onBack={() => setCurrentView('dashboard')} />
+                return (
+                    <Warehouse
+                        products={products}
+                        onUpdateProduct={updateProduct}
+                        stockHistory={stockHistory}
+                        onBack={() => setCurrentView('dashboard')}
+                    />
+                )
             case 'staff':
-                return <Staff
-                    staff={staff}
-                    onAddStaff={addStaff}
-                    onUpdateStaff={updateStaff}
-                    onDeleteStaff={deleteStaff}
-                    onBack={() => setCurrentView('dashboard')}
-                />
+                return (
+                    <Staff
+                        staff={staff}
+                        onAddStaff={addStaff}
+                        onUpdateStaff={updateStaff}
+                        onDeleteStaff={deleteStaff}
+                        onBack={() => setCurrentView('dashboard')}
+                    />
+                )
             case 'reports':
                 return <Reports orders={orders} products={products} onBack={() => setCurrentView('dashboard')} />
             default:

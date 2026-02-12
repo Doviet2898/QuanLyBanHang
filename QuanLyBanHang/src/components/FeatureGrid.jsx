@@ -10,6 +10,7 @@ function FeatureGrid({ onFeatureClick }) {
         { id: 'suppliers', name: 'Nhà cung cấp', icon: '🤝' },
         { id: 'notebook', name: 'Sổ nợ', icon: '📓' },
         { id: 'import-orders', name: 'Nhập hàng', icon: '🛒' },
+        { id: 'expenses', name: 'Thu chi', icon: '💸' },
         { id: 'calendar', name: 'Lịch nhắc', icon: '📅' },
         { id: 'categories', name: 'Danh mục', icon: '📂' },
         { id: 'store-settings', name: 'Cửa hàng', icon: '⚙️' },

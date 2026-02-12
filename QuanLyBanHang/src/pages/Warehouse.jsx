@@ -4,7 +4,7 @@ import '../styles/Warehouse.css'
 function Warehouse({ products, onUpdateProduct, stockHistory, onBack }) {
     const [searchTerm, setSearchTerm] = useState('')
     const [selectedProduct, setSelectedProduct] = useState(null)
-    const [adjustmentType, setAdjustmentType] = useState('import') // import or export
+    const [adjustmentType, setAdjustmentType] = useState('import') // import, export, balance
     const [quantity, setQuantity] = useState('')
     const [note, setNote] = useState('')
     const [viewTab, setViewTab] = useState('overview') // overview or history
@@ -17,19 +17,28 @@ function Warehouse({ products, onUpdateProduct, stockHistory, onBack }) {
             return
         }
 
-        const adjustmentQty = parseInt(quantity)
-        const newStock = adjustmentType === 'import'
-            ? selectedProduct.stock + adjustmentQty
-            : selectedProduct.stock - adjustmentQty
+        const val = parseInt(quantity)
+        let newStock = selectedProduct.stock
+
+        if (adjustmentType === 'import') {
+            newStock += val
+        } else if (adjustmentType === 'export') {
+            newStock -= val
+        } else if (adjustmentType === 'balance') {
+            newStock = val
+        }
 
         if (newStock < 0) {
-            alert('Số lượng xuất kho không được lớn hơn tồn kho hiện tại!')
+            alert('Tồn kho không được nhỏ hơn 0!')
             return
         }
 
-        onUpdateProduct(selectedProduct.id, { stock: newStock, note: note })
+        onUpdateProduct(selectedProduct.id, {
+            stock: newStock,
+            note: adjustmentType === 'balance' ? `[Kiểm kê/Cân đối] ${note}` : note
+        })
 
-        alert(`${adjustmentType === 'import' ? 'Nhập' : 'Xuất'} kho thành công!`)
+        alert('Cập nhật thành công!')
 
         // Reset form
         setSelectedProduct(null)
@@ -91,7 +100,16 @@ function Warehouse({ products, onUpdateProduct, stockHistory, onBack }) {
                                                     checked={adjustmentType === 'export'}
                                                     onChange={(e) => setAdjustmentType(e.target.value)}
                                                 />
-                                                <span>📤 Xuất kho</span>
+                                                <span>📤 Xuất</span>
+                                            </label>
+                                            <label className="radio-label">
+                                                <input
+                                                    type="radio"
+                                                    value="balance"
+                                                    checked={adjustmentType === 'balance'}
+                                                    onChange={(e) => setAdjustmentType(e.target.value)}
+                                                />
+                                                <span>⚖️ Cân đối</span>
                                             </label>
                                         </div>
                                     </div>

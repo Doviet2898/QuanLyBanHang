@@ -19,36 +19,53 @@ import './App.css'
 
 function App() {
     const [currentView, setCurrentView] = useState('dashboard')
-    const [storeName, setStoreName] = useState('Cafe Đỗ Việt')
-    const [themeColor, setThemeColor] = useState('#ff6b35')
+    const [storeName, setStoreName] = useState(() => localStorage.getItem('storeName') || 'Cafe Đỗ Việt')
+    const [themeColor, setThemeColor] = useState(() => localStorage.getItem('themeColor') || '#ff6b35')
 
-    // States for features
-    const [orders, setOrders] = useState([])
-    const [products, setProducts] = useState([
+    // States for features with localStorage persistence
+    const [orders, setOrders] = useState(() => JSON.parse(localStorage.getItem('orders')) || [])
+    const [products, setProducts] = useState(() => JSON.parse(localStorage.getItem('products')) || [
         { id: 1, name: 'Cà phê đen', price: 25000, stock: 100, category: 'Đồ uống' },
         { id: 2, name: 'Cà phê sữa', price: 30000, stock: 100, category: 'Đồ uống' },
         { id: 3, name: 'Bánh mì', price: 20000, stock: 50, category: 'Đồ ăn' },
         { id: 4, name: 'Trà đào', price: 35000, stock: 80, category: 'Đồ uống' },
     ])
-    const [categories, setCategories] = useState(['Đồ uống', 'Đồ ăn', 'Khác'])
-    const [suppliers, setSuppliers] = useState([
+    const [categories, setCategories] = useState(() => JSON.parse(localStorage.getItem('categories')) || ['Đồ uống', 'Đồ ăn', 'Khác'])
+    const [suppliers, setSuppliers] = useState(() => JSON.parse(localStorage.getItem('suppliers')) || [
         { id: 1, name: 'Công ty Cà Phê Việt', phone: '0912345678', address: 'Bảo Lộc, Lâm Đồng' }
     ])
-    const [debts, setDebts] = useState([])
-    const [importOrders, setImportOrders] = useState([])
-    const [reminders, setReminders] = useState([])
-    const [promotions, setPromotions] = useState([])
-    const [expenses, setExpenses] = useState([
+    const [debts, setDebts] = useState(() => JSON.parse(localStorage.getItem('debts')) || [])
+    const [importOrders, setImportOrders] = useState(() => JSON.parse(localStorage.getItem('importOrders')) || [])
+    const [reminders, setReminders] = useState(() => JSON.parse(localStorage.getItem('reminders')) || [])
+    const [promotions, setPromotions] = useState(() => JSON.parse(localStorage.getItem('promotions')) || [])
+    const [expenses, setExpenses] = useState(() => JSON.parse(localStorage.getItem('expenses')) || [
         { id: 1, date: new Date().toLocaleDateString('vi-VN'), title: 'Tiền điện tháng 1', amount: 1500000, type: 'Chi', category: 'Tiền ích' },
         { id: 2, date: new Date().toLocaleDateString('vi-VN'), title: 'Thu tiền thanh lý chai nhựa', amount: 200000, type: 'Thu', category: 'Khác' },
     ])
-    const [staff, setStaff] = useState([
+    const [staff, setStaff] = useState(() => JSON.parse(localStorage.getItem('staff')) || [
         { id: 1, name: 'Nguyễn Văn A', position: 'Quản lý', phone: '0901234567', salary: 15000000 },
         { id: 2, name: 'Trần Thị B', position: 'Nhân viên', phone: '0907654321', salary: 8000000 },
     ])
-    const [stockHistory, setStockHistory] = useState([
+    const [stockHistory, setStockHistory] = useState(() => JSON.parse(localStorage.getItem('stockHistory')) || [
         { id: 1, date: new Date().toLocaleString('vi-VN'), productName: 'Cà phê đen', type: 'Nhập kho', quantity: 100, note: 'Tồn kho ban đầu' },
     ])
+
+    // Persistent storage effect
+    useEffect(() => {
+        localStorage.setItem('orders', JSON.stringify(orders))
+        localStorage.setItem('products', JSON.stringify(products))
+        localStorage.setItem('categories', JSON.stringify(categories))
+        localStorage.setItem('suppliers', JSON.stringify(suppliers))
+        localStorage.setItem('debts', JSON.stringify(debts))
+        localStorage.setItem('importOrders', JSON.stringify(importOrders))
+        localStorage.setItem('reminders', JSON.stringify(reminders))
+        localStorage.setItem('promotions', JSON.stringify(promotions))
+        localStorage.setItem('expenses', JSON.stringify(expenses))
+        localStorage.setItem('staff', JSON.stringify(staff))
+        localStorage.setItem('stockHistory', JSON.stringify(stockHistory))
+        localStorage.setItem('storeName', storeName)
+        localStorage.setItem('themeColor', themeColor)
+    }, [orders, products, categories, suppliers, debts, importOrders, reminders, promotions, expenses, staff, stockHistory, storeName, themeColor])
 
     // Effect to update doc title when storeName changes
     useEffect(() => {

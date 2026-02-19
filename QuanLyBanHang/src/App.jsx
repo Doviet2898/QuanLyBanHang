@@ -20,6 +20,7 @@ import './App.css'
 function App() {
     const [currentView, setCurrentView] = useState('dashboard')
     const [storeName, setStoreName] = useState('Cafe Đỗ Việt')
+    const [themeColor, setThemeColor] = useState('#ff6b35')
 
     // States for features
     const [orders, setOrders] = useState([])
@@ -53,6 +54,33 @@ function App() {
     useEffect(() => {
         document.title = `Quản Lý Bán Hàng - ${storeName}`
     }, [storeName])
+
+    // Effect to apply theme color
+    useEffect(() => {
+        document.documentElement.style.setProperty('--primary-orange', themeColor)
+        // Set a slightly darker shade for gradients (manual calculation)
+        const darker = themeColor.startsWith('#')
+            ? adjustColor(themeColor, -20)
+            : themeColor
+        document.documentElement.style.setProperty('--primary-orange-dark', darker)
+    }, [themeColor])
+
+    // Simple helper to adjust color brightness
+    function adjustColor(col, amt) {
+        let usePound = false
+        if (col[0] === "#") {
+            col = col.slice(1)
+            usePound = true
+        }
+        let num = parseInt(col, 16)
+        let r = (num >> 16) + amt
+        if (r > 255) r = 255; else if (r < 0) r = 0
+        let b = ((num >> 8) & 0x00FF) + amt
+        if (b > 255) b = 255; else if (b < 0) b = 0
+        let g = (num & 0x0000FF) + amt
+        if (g > 255) g = 255; else if (g < 0) g = 0
+        return (usePound ? "#" : "") + (g | (b << 8) | (r << 16)).toString(16).padStart(6, '0')
+    }
 
     // Helper functions
     const addOrder = (order) => {
@@ -132,7 +160,7 @@ function App() {
             case 'calendar': return <Reminders reminders={reminders} setReminders={setReminders} {...commonProps} />
             case 'categories': return <Categories categories={categories} setCategories={setCategories} {...commonProps} />
             case 'promotions': return <Promotions promotions={promotions} setPromotions={setPromotions} {...commonProps} />
-            case 'store-settings': return <StoreSettings storeName={storeName} setStoreName={setStoreName} {...commonProps} />
+            case 'store-settings': return <StoreSettings storeName={storeName} setStoreName={setStoreName} themeColor={themeColor} setThemeColor={setThemeColor} {...commonProps} />
             case 'expenses': return <Expenses expenses={expenses} setExpenses={setExpenses} {...commonProps} />
             default: return <Dashboard onFeatureClick={setCurrentView} orders={orders} products={products} />
         }
